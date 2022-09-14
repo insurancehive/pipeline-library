@@ -10,12 +10,13 @@ def call(String imageName, String imageTag = env.BUILD_NUMBER, String gcpProject
         env.VERSION = readFile 'version.txt'
         env.VERSION = env.VERSION.trim()
         imageTag = env.VERSION
+        commitId = sh(returnStdout: true, script: 'git rev-parse HEAD')
       } catch(e) {}
       imageName = imageName.toLowerCase()
       container(name: 'kaniko', shell: '/busybox/sh') {
         withEnv(['PATH+EXTRA=/busybox:/kaniko']) {
           sh """#!/busybox/sh
-            /kaniko/executor -f ${pwd()}/${dockerFile} -c ${pwd()} --build-arg buildNumber=${BUILD_NUMBER} --build-arg shortCommit=${env.SHORT_COMMIT} --build-arg commitAuthor=${env.COMMIT_AUTHOR} -d ${dockerReg}/${imageName}:${imageTag}
+            /kaniko/executor -f ${pwd()}/${dockerFile} -c ${pwd()} --build-arg buildNumber=${BUILD_NUMBER} --build-arg shortCommit=${env.SHORT_COMMIT} --build-arg commitAuthor=${env.COMMIT_AUTHOR} -d ${dockerReg}/${imageName}:${commitId}
           """
         }
       }
